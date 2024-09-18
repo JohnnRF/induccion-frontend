@@ -14,3 +14,19 @@ export interface Product {
     image?: string;
     rating?: number;
 }
+
+export interface ProductResponseApi {
+    totalRecords?: number;
+    totalPages?:   number;
+    currentPage?:  number;
+    pageSize?:     number;
+    products?:     ProductApi[];
+}
+
+export interface ProductApi{
+    productId?: number,
+    name?:      string,
+    price?:     number,
+    stock?:     number,
+    active?:    boolean
+}
