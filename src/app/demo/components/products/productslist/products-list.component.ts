@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { LazyLoadEvent, MessageService } from 'primeng/api';
 import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs';
 import { Product, ProductApi, ProductResponseApi } from 'src/app/demo/api/product';
@@ -13,35 +13,31 @@ import { ProductService } from 'src/app/demo/service/product.service';
 export class ProductsListComponent implements OnInit, OnDestroy{
 
   productDialog: boolean = false;
-
   deleteProductDialog: boolean = false;
 
 
   products: ProductApi[] = [];
   product: ProductApi = {};
 
-
-  selectedProducts: ProductApi[] = [];
-
   submitted: boolean = false;
-
-  cols: any[] = [];
 
   statuses: any[] = [];
 
-  rowsPerPageOptions = [5, 10, 20];
 
   private productSubscription: Subscription;
 
+  totalRecords: number = 0;
+  lastLazyLoadEvent: LazyLoadEvent;
+  
+  search  : string  = '';
+  active  : boolean = null;
+  minStock: number;
+
   constructor(private productService: ProductService, private messageService: MessageService){
-    
+
   }
 
-
   ngOnInit(): void {
-    // llamar a la función que obtiene los usuarios desde el servicio
-    this.getAllProducts();
-
     // estados para el formulario
     this.statuses = [
       {label: 'True', value: true},
@@ -51,19 +47,32 @@ export class ProductsListComponent implements OnInit, OnDestroy{
   }
 
   //Obtener la lista de productos
-  getAllProducts(){
-    this.productSubscription = this.productService.getApiProducts().subscribe(
+  getAllProducts($event: LazyLoadEvent){
+    //Guardar el último evento
+    this.lastLazyLoadEvent = $event;
+
+    // Obtener la página y el número de registros del $event
+    const page     = ($event.first / $event.rows)+1;
+    const pageSize = $event.rows;
+
+    // Obtener parametros para el filtro
+    const search   = this.search;
+    const active   = this.active;
+    const minStock = this.minStock;
+
+    // Enviar parametros de paginación al servicio
+    this.productSubscription = this.productService.getApiProducts(page, pageSize, search, active, minStock).subscribe(
       (response: ProductResponseApi) =>{
-        console.log(response.products);
-        this.products = response.products;
+        this.products = response.items;
+        this.totalRecords = response.totalRecords;
       }
     );
   }
 
   //Abrir modal para el registro de un nuevo producto
   openNew() {
-    this.product = {};
-    this.submitted = false;
+    this.product       = {};
+    this.submitted     = false;
     this.productDialog = true;
   }
 
@@ -79,7 +88,7 @@ export class ProductsListComponent implements OnInit, OnDestroy{
           response => {
             this.messageService.add({severity: 'success', summary: 'Successful', detail: 'Producto Actualizado', life: 3000})
             //Actualiza la tabla de productos
-            this.getAllProducts();
+            this.getAllProducts(this.lastLazyLoadEvent);
           },
           error =>{
             this.messageService.add({ severity: 'warn', summary: 'Error', detail: 'Error al actualizar producto' });
@@ -93,7 +102,7 @@ export class ProductsListComponent implements OnInit, OnDestroy{
         this.messageService.add({severity: 'success', summary: 'Successful', detail: 'Producto Registrado', life: 3000})
 
         // Actualiza la tabla de productos
-        this.getAllProducts();
+        this.getAllProducts(this.lastLazyLoadEvent);
       },
       error => {
         this.messageService.add({ severity: 'warn', summary: 'Error', detail: 'Error al registrar producto' });
@@ -129,7 +138,7 @@ export class ProductsListComponent implements OnInit, OnDestroy{
         response => {
           this.messageService.add({severity: 'success', summary: 'Successful', detail: 'Producto Eliminado', life: 3000})
           
-          this.getAllProducts();
+          this.getAllProducts(this.lastLazyLoadEvent);
         },
         error => {
           this.messageService.add({ severity: 'warn', summary: 'Error', detail: 'Error al eliminar producto' });
@@ -145,8 +154,10 @@ export class ProductsListComponent implements OnInit, OnDestroy{
   }
 
 
-  onGlobalFilter(table: Table, event: Event) {
-    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+  applyFilters() {
+    if (this.lastLazyLoadEvent) {
+      this.getAllProducts(this.lastLazyLoadEvent);
+    }
   }
 
   ngOnDestroy(): void {

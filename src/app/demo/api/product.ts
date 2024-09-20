@@ -20,7 +20,7 @@ export interface ProductResponseApi {
     totalPages?:   number;
     currentPage?:  number;
     pageSize?:     number;
-    products?:     ProductApi[];
+    items?:     ProductApi[];
 }
 
 export interface ProductApi{

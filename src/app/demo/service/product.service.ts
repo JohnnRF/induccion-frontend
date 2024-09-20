@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Product, ProductApi } from '../api/product';
 import { environment } from 'src/environments/environment';
@@ -14,9 +14,27 @@ export class ProductService {
      * Realizar petición GET a la API que devuelve todos los productos
      * @returns products[]
      */
-    getApiProducts(){
+    getApiProducts(page: number, pageSize: number, search?: string, active?: boolean, minStock?: number){
 
-        return this.http.get<any>(`${this.baseUrl}`);
+        const params: any = {
+            page: page,
+            pageSize: pageSize
+        }
+        
+        if (search) {
+            params.search = search;
+        }
+
+        if (active !== undefined && active !== null) {
+            params.active = active;
+        }
+
+        if (minStock !== undefined && minStock !== null) {
+            params.minStock = minStock;
+        }
+
+        return this.http.get<any>(`${this.baseUrl}`, {params})
+        //return this.http.get<any>(`${this.baseUrl}?page=${page}&pageSize=${pageSize}`);
 
     }
 
