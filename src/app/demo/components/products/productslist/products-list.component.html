@@ -17,6 +17,12 @@
                 <p-dropdown [options]="statuses" [(ngModel)]="active" showClear="true" (onChange)="applyFilters()" placeholder="Estado"></p-dropdown>
               
                 <input type="number" pInputText placeholder="Stock mínimo" [(ngModel)]="minStock" (ngModelChange)="applyFilters()"/>
+
+                <p-calendar [(ngModel)]="entryDate" placeholder="Fecha de Ingreso" (ngModelChange)="applyFilters()" ></p-calendar>
+                <!--
+                <p-dropdown [options]="bodega" optionLabel="name" [(ngModel)]="bodegaId" showClear="true" (onChange)="applyFilters()" placeholder="Bodega"></p-dropdown>
+                -->
+                <p-dropdown  [(ngModel)]="bodegaId" [options]="bodega" placeholder="Select a Bodega" optionLabel="name" optionValue="bodegaId" showClear="true" (onChange)="applyFilters()"></p-dropdown>
             </div>
 
 
@@ -31,11 +37,13 @@
             >
             <ng-template pTemplate="header">
                 <tr>
-                    <th style="width:14%">Code</th>
+                    <th style="width:10%">Code</th>
                     <th style="width:20%">Name</th>
-                    <th style="width:16%">Price</th>
-                    <th style="width:16%">Stock</th>
-                    <th style="width:20%">Status</th>
+                    <th style="width:14%">Price</th>
+                    <th style="width:16%">Bodega</th>
+                    <th style="width:14%">Stock</th>
+                    <th style="width:14%">Fecha Ingreso</th>
+                    <th style="width:16%">Status</th>
                     <th></th>
                 </tr>
             </ng-template>
@@ -44,7 +52,9 @@
                     <td>{{ product.productId }}</td>
                     <td>{{ product.name }}</td>
                     <td>{{ product.price }}</td>
+                    <td>{{ product.bodega.name }}</td>
                     <td>{{ product.stock }}</td>
+                    <td>{{ product.fechaIngreso | date: 'shortDate'}}</td>
                     <td>{{ product.active }}</td>
                     <td>
                         <div class="flex">
@@ -65,6 +75,22 @@
                     <label for="name">Name</label>
                     <input type="text" pInputText id="name" [(ngModel)]="product.name" required autofocus [ngClass]="{'ng-invalid ng-dirty' : submitted && !product.name}"/>
                     <small class="ng-dirty ng-invalid" *ngIf="submitted && !product.name">Name is required.</small>
+                </div>
+
+                <!--
+                <div class="field">
+                    <label for="bodega">Bodega</label>
+                    <p-dropdown  [(ngModel)]="product.bodegaId" [options]="bodega" placeholder="Select a Bodega" optionLabel="name" optionValue="bodegaId">
+
+                    </p-dropdown>
+                </div>
+                -->
+                <div class="field">
+                    <p-dropdown  [(ngModel)]="product.bodegaId" [options]="bodega" placeholder="Select a Bodega" optionLabel="name" optionValue="bodegaId"></p-dropdown>
+                </div>
+                <div class="field">
+                    <label for="bodega">Fecha de ingreso</label>
+                    <p-calendar [(ngModel)]="product.fechaIngreso" ></p-calendar>
                 </div>
 
                 <div class="field">

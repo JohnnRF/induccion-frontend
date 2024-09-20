@@ -2,7 +2,8 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { LazyLoadEvent, MessageService } from 'primeng/api';
 import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs';
-import { Product, ProductApi, ProductResponseApi } from 'src/app/demo/api/product';
+import { Bodega, Product, ProductApi, ProductResponseApi } from 'src/app/demo/api/product';
+import { CategoryService } from 'src/app/demo/service/category.service';
 import { ProductService } from 'src/app/demo/service/product.service';
 
 @Component({
@@ -22,19 +23,26 @@ export class ProductsListComponent implements OnInit, OnDestroy{
   submitted: boolean = false;
 
   statuses: any[] = [];
-
+  bodega: Bodega[] = [];
+  selectedBodega: Bodega;
 
   private productSubscription: Subscription;
 
   totalRecords: number = 0;
   lastLazyLoadEvent: LazyLoadEvent;
   
+  // Variables para los fltros
   search  : string  = '';
   active  : boolean = null;
   minStock: number;
+  entryDate: Date   = null;
+  bodegaId: number;
 
-  constructor(private productService: ProductService, private messageService: MessageService){
-
+  constructor(
+    private productService: ProductService,
+    private categoryService: CategoryService, 
+    private messageService: MessageService
+  ){
   }
 
   ngOnInit(): void {
@@ -43,11 +51,13 @@ export class ProductsListComponent implements OnInit, OnDestroy{
       {label: 'True', value: true},
       {label: 'False', value: false}
     ]
+
+    this.getAllCategories();
     
   }
 
   //Obtener la lista de productos
-  getAllProducts($event: LazyLoadEvent){
+  async getAllProducts($event: LazyLoadEvent){
     //Guardar el último evento
     this.lastLazyLoadEvent = $event;
 
@@ -56,16 +66,29 @@ export class ProductsListComponent implements OnInit, OnDestroy{
     const pageSize = $event.rows;
 
     // Obtener parametros para el filtro
-    const search   = this.search;
-    const active   = this.active;
-    const minStock = this.minStock;
-
+    
+    const search    = this.search;
+    const active    = this.active;
+    const minStock  = this.minStock;
+    const entryDate = this.entryDate;
+    const bodegaId  = this.bodegaId;
+    
     // Enviar parametros de paginación al servicio
-    this.productSubscription = this.productService.getApiProducts(page, pageSize, search, active, minStock).subscribe(
+    this.productSubscription = this.productService.getApiProducts(page, pageSize, search, active, minStock, entryDate, bodegaId).subscribe(
       (response: ProductResponseApi) =>{
         this.products = response.items;
         this.totalRecords = response.totalRecords;
       }
+    );
+    
+  }
+
+  getAllCategories(){
+    this.categoryService.getApiCategories().subscribe(
+      (response: Bodega[]) =>{
+        this.bodega = response;
+        console.log(this.bodega);
+      } 
     );
   }
 
@@ -79,8 +102,7 @@ export class ProductsListComponent implements OnInit, OnDestroy{
   //Registrar o actualizar un nuevo producto
   saveProduct(){
     this.submitted = true; 
-
-
+    
     if (this.product.productId) {
     // Enviar el producto y su ID al servicio que reliza el put
       this.productService.putApiProduct(this.product.productId, this.product)
@@ -98,13 +120,13 @@ export class ProductsListComponent implements OnInit, OnDestroy{
     // Enviar el producto al servicio que reliza el post
     this.productService.postApiProduct(this.product).subscribe(
       response => {
-
-        this.messageService.add({severity: 'success', summary: 'Successful', detail: 'Producto Registrado', life: 3000})
-
         // Actualiza la tabla de productos
         this.getAllProducts(this.lastLazyLoadEvent);
+
+        this.messageService.add({severity: 'success', summary: 'Successful', detail: 'Producto Registrado', life: 3000})
       },
       error => {
+        
         this.messageService.add({ severity: 'warn', summary: 'Error', detail: 'Error al registrar producto' });
       }
     );
@@ -119,6 +141,11 @@ export class ProductsListComponent implements OnInit, OnDestroy{
   // Abrir el modal del formulario con los datos del registro selecionado
   editProduct(product: ProductApi){
     this.product = { ...product};
+    
+    if(this.product.fechaIngreso){
+      this.product.fechaIngreso = new Date(this.product.fechaIngreso);
+    }
+
     this.productDialog = true;
   }
 

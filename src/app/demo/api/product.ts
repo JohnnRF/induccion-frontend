@@ -24,9 +24,18 @@ export interface ProductResponseApi {
 }
 
 export interface ProductApi{
-    productId?: number,
-    name?:      string,
-    price?:     number,
-    stock?:     number,
-    active?:    boolean
+    productId?:    number,
+    name?:         string,
+    price?:        number,
+    stock?:        number,
+    active?:       boolean,
+    fechaIngreso?: Date,
+    bodegaId?:     number
+    bodega?:       Bodega
+}
+
+export interface Bodega{
+    bodegaId?:   number,
+    name?:        string,
+    description?: string
 }

@@ -18,6 +18,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { ProductsListComponent } from './products-list.component';
+import { CalendarModule } from 'primeng/calendar';
 
 @NgModule({
   declarations: [ProductsListComponent],
@@ -37,7 +38,8 @@ import { ProductsListComponent } from './products-list.component';
     DropdownModule,
     RadioButtonModule,
     InputNumberModule,
-    DialogModule
+    DialogModule,
+    CalendarModule
   ]
 })
 export class ProductslistModule { }

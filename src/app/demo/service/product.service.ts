@@ -14,7 +14,7 @@ export class ProductService {
      * Realizar petición GET a la API que devuelve todos los productos
      * @returns products[]
      */
-    getApiProducts(page: number, pageSize: number, search?: string, active?: boolean, minStock?: number){
+    getApiProducts(page: number, pageSize: number, search?: string, active?: boolean, minStock?: number, entryDate?: Date, bodegaId?: number){
 
         const params: any = {
             page: page,
@@ -31,6 +31,15 @@ export class ProductService {
 
         if (minStock !== undefined && minStock !== null) {
             params.minStock = minStock;
+        }
+
+        if (entryDate !== undefined && entryDate !== null) {
+            const entryDateISO = entryDate.toISOString();
+            params.entryDate = entryDateISO;
+        }
+
+        if (bodegaId !== undefined && bodegaId !== null){
+            params.bodegaId = bodegaId;
         }
 
         return this.http.get<any>(`${this.baseUrl}`, {params})
@@ -69,7 +78,6 @@ export class ProductService {
     deleteApiProduct(id: number){
         return this.http.delete<any>(`${this.baseUrl}/${id}`);
     }
-
 
 
     getProductsSmall() {
